@@ -14,6 +14,7 @@ import { playAlarm, unlockAudio } from "../lib/audio";
 import { formatDuration } from "../lib/format";
 import { IconButton } from "./ui";
 import { GrainGradient } from "./GrainGradient";
+import { MusicPlayer } from "./MusicPlayer";
 import { PauseModal } from "./PauseModal";
 import { SpaceTravelTransition } from "./SpaceTravelTransition";
 import type { Mission, PauseReason, Task } from "../types";
@@ -130,6 +131,10 @@ export function FocusPage() {
           }}
         />
       </div>
+
+      {/* Ambient focus music — stays mounted across task transitions so the
+          stream keeps playing fluidly between tasks. */}
+      <MusicPlayer />
     </div>
   );
 }
@@ -182,7 +187,7 @@ function FocusTask({
   const accent = isOver ? "#ef4444" : "#f97316";
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 pb-10">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 pb-32 pt-6">
       {/* Task name */}
       <motion.h1
         initial={{ opacity: 0, y: 16 }}

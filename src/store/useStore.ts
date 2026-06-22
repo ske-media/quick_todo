@@ -27,6 +27,14 @@ interface AppState {
   // True once the store has been reconciled with the remote database.
   hydrated: boolean;
 
+  // --- Focus music player ---
+  musicVolume: number; // 0..1 (persisted)
+  setMusicVolume: (vol: number) => void;
+  currentStation: string; // station id (persisted)
+  setCurrentStation: (stationId: string) => void;
+  isMusicPlaying: boolean; // NOT persisted (avoid autoplay on reload)
+  setIsMusicPlaying: (playing: boolean) => void;
+
   // --- Sync actions ---
   hydrate: () => Promise<void>;
 
@@ -73,6 +81,14 @@ export const useStore = create<AppState>()(
       currentTaskId: null,
       toast: null,
       hydrated: false,
+
+      musicVolume: 0.5,
+      setMusicVolume: (vol) =>
+        set({ musicVolume: Math.min(1, Math.max(0, vol)) }),
+      currentStation: "lofi",
+      setCurrentStation: (stationId) => set({ currentStation: stationId }),
+      isMusicPlaying: false,
+      setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
 
       hydrate: async () => {
         const remoteData = await remote.fetchAll();
@@ -333,6 +349,9 @@ export const useStore = create<AppState>()(
         // Keep navigation context so "Arrêt et reprise plus tard" survives reload
         currentMissionId: state.currentMissionId,
         currentTaskId: state.currentTaskId,
+        // Music preferences (NOT isMusicPlaying — avoid autoplay on reload)
+        musicVolume: state.musicVolume,
+        currentStation: state.currentStation,
       }),
     }
   )
