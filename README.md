@@ -21,7 +21,35 @@ Construite avec **React + Vite + TypeScript**, **Tailwind CSS v4**, **Zustand**
   - Transition **« Space Travelling »** (warp/zoom/fondu) entre chaque tâche.
 - **Logs / Rapports** : historique complet, temps alloué vs réel (avec
   dépassement) et détail des pauses (motif + durée).
-- **Persistance** : tout est sauvegardé dans le LocalStorage (clé `quick-todo`).
+- **Persistance** : données stockées dans une base **Supabase** (Postgres),
+  partagée et **sans compte**, avec le LocalStorage en cache hors-ligne.
+
+## Persistance des données (Supabase)
+
+L'application persiste missions et tâches dans une base Postgres Supabase.
+
+- Modèle **sans authentification** : un unique jeu de données partagé. L'accès
+  est régi par des policies RLS permissives (rôle `anon`). C'est un compromis
+  assumé : toute personne disposant de la clé publishable peut lire/écrire.
+- Le **LocalStorage** sert de cache local et de repli hors-ligne. Au démarrage,
+  l'app se réconcilie avec la base (la base est la source de vérité ; si elle est
+  vide au premier lancement, le cache local est poussé vers la base).
+- Écritures **best-effort** : une erreur réseau ne bloque jamais l'UI. Le temps
+  écoulé (mis à jour chaque seconde) est envoyé en base de façon throttlée
+  (toutes les ~10 s), et immédiatement aux moments clés (pause, validation, arrêt).
+
+### Configuration
+
+Les variables sont dans `.env` (voir `.env.example`) :
+
+```bash
+VITE_SUPABASE_URL=https://votre-projet.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_xxx
+```
+
+Le schéma SQL est versionné dans
+[`supabase/migrations/`](supabase/migrations/). Si les variables sont absentes,
+l'app fonctionne en mode LocalStorage uniquement.
 
 ## Démarrage
 

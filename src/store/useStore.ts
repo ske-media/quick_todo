@@ -7,6 +7,7 @@ import type {
   Task,
   View,
 } from "../types";
+import * as remote from "../lib/sync";
 
 const uid = () =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
@@ -23,6 +24,12 @@ interface AppState {
   // Ephemeral UI flag (not persisted-critical): success toast message
   toast: string | null;
 
+  // True once the store has been reconciled with the remote database.
+  hydrated: boolean;
+
+  // --- Sync actions ---
+  hydrate: () => Promise<void>;
+
   // --- Navigation actions ---
   navigate: (view: View, missionId?: string | null) => void;
   setCurrentTask: (taskId: string | null) => void;
@@ -35,6 +42,10 @@ interface AppState {
 
   // --- Task actions ---
   addTask: (missionId: string, title: string, allocatedMin: number) => void;
+  updateTask: (
+    taskId: string,
+    patch: { title?: string; allocatedMin?: number }
+  ) => void;
   deleteTask: (taskId: string) => void;
   reorderTask: (taskId: string, direction: "up" | "down") => void;
   updateTaskTime: (taskId: string, elapsedSec: number) => void;
@@ -61,6 +72,34 @@ export const useStore = create<AppState>()(
       currentMissionId: null,
       currentTaskId: null,
       toast: null,
+      hydrated: false,
+
+      hydrate: async () => {
+        const remoteData = await remote.fetchAll();
+        if (!remoteData) {
+          // Supabase not configured/unreachable: stay on LocalStorage only.
+          set({ hydrated: true });
+          return;
+        }
+        const local = get();
+        const remoteEmpty =
+          remoteData.missions.length === 0 && remoteData.tasks.length === 0;
+        const localHasData =
+          local.missions.length > 0 || local.tasks.length > 0;
+
+        if (remoteEmpty && localHasData) {
+          // First run with an empty DB: seed it from the local cache.
+          await remote.pushAll(local.missions, local.tasks);
+          set({ hydrated: true });
+        } else {
+          // Shared database is the source of truth.
+          set({
+            missions: remoteData.missions,
+            tasks: remoteData.tasks,
+            hydrated: true,
+          });
+        }
+      },
 
       navigate: (view, missionId) =>
         set((state) => ({
@@ -82,21 +121,27 @@ export const useStore = create<AppState>()(
           status: "active",
         };
         set((state) => ({ missions: [mission, ...state.missions] }));
+        void remote.upsertMission(mission);
         return id;
       },
 
-      deleteMission: (missionId) =>
+      deleteMission: (missionId) => {
         set((state) => ({
           missions: state.missions.filter((m) => m.id !== missionId),
           tasks: state.tasks.filter((t) => t.missionId !== missionId),
-        })),
+        }));
+        void remote.deleteMission(missionId);
+      },
 
-      setMissionStatus: (missionId, status) =>
+      setMissionStatus: (missionId, status) => {
         set((state) => ({
           missions: state.missions.map((m) =>
             m.id === missionId ? { ...m, status } : m
           ),
-        })),
+        }));
+        const mission = get().missions.find((m) => m.id === missionId);
+        if (mission) void remote.upsertMission(mission);
+      },
 
       addTask: (missionId, title, allocatedMin) => {
         const siblings = get().tasks.filter((t) => t.missionId === missionId);
@@ -115,11 +160,33 @@ export const useStore = create<AppState>()(
           pauses: [],
         };
         set((state) => ({ tasks: [...state.tasks, task] }));
+        void remote.upsertTask(task);
       },
 
-      deleteTask: (taskId) =>
+      updateTask: (taskId, patch) => {
+        set((state) => ({
+          tasks: state.tasks.map((t) => {
+            if (t.id !== taskId) return t;
+            const next = { ...t };
+            if (patch.title !== undefined) {
+              next.title = patch.title.trim() || t.title;
+            }
+            if (patch.allocatedMin !== undefined) {
+              next.allocatedMin = Math.max(
+                0,
+                Math.round(patch.allocatedMin) || 0
+              );
+            }
+            return next;
+          }),
+        }));
+        const task = get().tasks.find((t) => t.id === taskId);
+        if (task) void remote.upsertTask(task);
+      },
+
+      deleteTask: (taskId) => {
+        const target = get().tasks.find((t) => t.id === taskId);
         set((state) => {
-          const target = state.tasks.find((t) => t.id === taskId);
           if (!target) return {};
           const remaining = state.tasks
             .filter((t) => t.id !== taskId)
@@ -129,9 +196,16 @@ export const useStore = create<AppState>()(
                 : t
             );
           return { tasks: remaining };
-        }),
+        });
+        if (!target) return;
+        void remote.deleteTask(taskId);
+        // Persist the re-numbered siblings.
+        void remote.upsertTasks(
+          get().tasks.filter((t) => t.missionId === target.missionId)
+        );
+      },
 
-      reorderTask: (taskId, direction) =>
+      reorderTask: (taskId, direction) => {
         set((state) => {
           const target = state.tasks.find((t) => t.id === taskId);
           if (!target) return {};
@@ -149,16 +223,26 @@ export const useStore = create<AppState>()(
             return t;
           });
           return { tasks };
-        }),
+        });
+        const target = get().tasks.find((t) => t.id === taskId);
+        if (target) {
+          void remote.upsertTasks(
+            get().tasks.filter((t) => t.missionId === target.missionId)
+          );
+        }
+      },
 
-      updateTaskTime: (taskId, elapsedSec) =>
+      updateTaskTime: (taskId, elapsedSec) => {
         set((state) => ({
           tasks: state.tasks.map((t) =>
             t.id === taskId ? { ...t, elapsedSec } : t
           ),
-        })),
+        }));
+        const task = get().tasks.find((t) => t.id === taskId);
+        if (task) remote.throttledUpsertTask(task);
+      },
 
-      setTaskStatus: (taskId, status) =>
+      setTaskStatus: (taskId, status) => {
         set((state) => ({
           tasks: state.tasks.map((t) =>
             t.id === taskId
@@ -172,9 +256,12 @@ export const useStore = create<AppState>()(
                 }
               : t
           ),
-        })),
+        }));
+        const task = get().tasks.find((t) => t.id === taskId);
+        if (task) remote.flushTask(task);
+      },
 
-      addPause: (taskId, reason, durationSec) =>
+      addPause: (taskId, reason, durationSec) => {
         set((state) => ({
           tasks: state.tasks.map((t) =>
             t.id === taskId
@@ -192,16 +279,22 @@ export const useStore = create<AppState>()(
                 }
               : t
           ),
-        })),
+        }));
+        const task = get().tasks.find((t) => t.id === taskId);
+        if (task) remote.flushTask(task);
+      },
 
-      completeTask: (taskId) =>
+      completeTask: (taskId) => {
         set((state) => ({
           tasks: state.tasks.map((t) =>
             t.id === taskId
               ? { ...t, status: "done", completedAt: Date.now() }
               : t
           ),
-        })),
+        }));
+        const task = get().tasks.find((t) => t.id === taskId);
+        if (task) remote.flushTask(task);
+      },
 
       startMission: (missionId) => {
         const ordered = get().getOrderedTasks(missionId);

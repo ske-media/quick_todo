@@ -17,6 +17,12 @@ export default function App() {
   const view = useStore((s) => s.view);
   const toast = useStore((s) => s.toast);
   const setToast = useStore((s) => s.setToast);
+  const hydrate = useStore((s) => s.hydrate);
+
+  // Reconcile with the shared Supabase database on startup.
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
 
   // Auto-dismiss the success toast.
   useEffect(() => {

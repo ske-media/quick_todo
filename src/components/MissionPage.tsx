@@ -7,13 +7,14 @@ import {
   Clock,
   ListChecks,
   Pause,
+  Pencil,
   Play,
   Plus,
   Timer,
   Trash2,
 } from "lucide-react";
 import { useStore } from "../store/useStore";
-import { Button, Card, IconButton } from "./ui";
+import { Button, Card, IconButton, Modal } from "./ui";
 import { formatHuman } from "../lib/format";
 import type { Task, TaskStatus } from "../types";
 
@@ -34,6 +35,7 @@ export function MissionPage() {
   );
   const tasks = useStore((s) => s.tasks);
   const addTask = useStore((s) => s.addTask);
+  const updateTask = useStore((s) => s.updateTask);
   const deleteTask = useStore((s) => s.deleteTask);
   const reorderTask = useStore((s) => s.reorderTask);
   const navigate = useStore((s) => s.navigate);
@@ -41,6 +43,25 @@ export function MissionPage() {
 
   const [title, setTitle] = useState("");
   const [minutes, setMinutes] = useState("25");
+
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editMinutes, setEditMinutes] = useState("");
+
+  const openEdit = (task: Task) => {
+    setEditId(task.id);
+    setEditTitle(task.title);
+    setEditMinutes(String(task.allocatedMin));
+  };
+
+  const submitEdit = () => {
+    if (!editId) return;
+    updateTask(editId, {
+      title: editTitle,
+      allocatedMin: parseInt(editMinutes, 10) || 0,
+    });
+    setEditId(null);
+  };
 
   const ordered = useMemo<Task[]>(
     () =>
@@ -204,6 +225,13 @@ export function MissionPage() {
                   </div>
 
                   <IconButton
+                    aria-label="Modifier la tâche"
+                    className="h-8 w-8"
+                    onClick={() => openEdit(t)}
+                  >
+                    <Pencil size={15} />
+                  </IconButton>
+                  <IconButton
                     aria-label="Supprimer la tâche"
                     className="h-8 w-8"
                     onClick={() => deleteTask(t.id)}
@@ -234,6 +262,49 @@ export function MissionPage() {
             : "Lancer la mission"}
         </Button>
       </div>
+
+      <Modal
+        open={editId !== null}
+        onClose={() => setEditId(null)}
+        title="Modifier la tâche"
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="mb-1.5 block text-sm text-zinc-400">
+              Intitulé de la tâche
+            </label>
+            <input
+              autoFocus
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitEdit()}
+              placeholder="Intitulé de la tâche"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 placeholder-zinc-600 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm text-zinc-400">
+              Temps alloué (minutes)
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={editMinutes}
+              onChange={(e) => setEditMinutes(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitEdit()}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" full onClick={() => setEditId(null)}>
+              Annuler
+            </Button>
+            <Button variant="primary" full onClick={submitEdit}>
+              Enregistrer
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
