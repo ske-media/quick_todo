@@ -57,6 +57,8 @@ export function FocusPage() {
     completeTask(task.id);
     const next = getNextTask(mission.id, task.id);
     nextTaskRef.current = next;
+    // Last task: fade the ambient music out during the success animation.
+    if (!next) useStore.getState().setIsMusicFading(true);
     setTransition({ active: true, isFinal: !next });
   };
 

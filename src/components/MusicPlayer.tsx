@@ -38,6 +38,8 @@ export function MusicPlayer() {
   const setCurrentStation = useStore((s) => s.setCurrentStation);
   const isMusicPlaying = useStore((s) => s.isMusicPlaying);
   const setIsMusicPlaying = useStore((s) => s.setIsMusicPlaying);
+  const isMusicFading = useStore((s) => s.isMusicFading);
+  const setIsMusicFading = useStore((s) => s.setIsMusicFading);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -56,10 +58,33 @@ export function MusicPlayer() {
     }
   }, [isMusicPlaying, currentStation]);
 
-  // Keep the audio element volume in sync.
+  // Keep the audio element volume in sync (unless a fade-out is running).
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = musicVolume;
-  }, [musicVolume]);
+    if (audioRef.current && !isMusicFading) audioRef.current.volume = musicVolume;
+  }, [musicVolume, isMusicFading]);
+
+  // Smooth fade-out at the end of a mission, then stop and restore volume.
+  useEffect(() => {
+    if (!isMusicFading) return;
+    const audio = audioRef.current;
+    if (!audio || !isMusicPlaying) {
+      setIsMusicFading(false);
+      return;
+    }
+    const id = window.setInterval(() => {
+      const next = audio.volume - 0.05;
+      if (next <= 0.001) {
+        window.clearInterval(id);
+        audio.pause();
+        audio.volume = musicVolume; // restore for the next session
+        setIsMusicPlaying(false);
+        setIsMusicFading(false);
+      } else {
+        audio.volume = next;
+      }
+    }, 60);
+    return () => window.clearInterval(id);
+  }, [isMusicFading, isMusicPlaying, musicVolume, setIsMusicPlaying, setIsMusicFading]);
 
   const VolumeIcon =
     musicVolume === 0 ? VolumeX : musicVolume < 0.5 ? Volume1 : Volume2;

@@ -34,6 +34,8 @@ interface AppState {
   setCurrentStation: (stationId: string) => void;
   isMusicPlaying: boolean; // NOT persisted (avoid autoplay on reload)
   setIsMusicPlaying: (playing: boolean) => void;
+  isMusicFading: boolean; // transient: triggers an audio fade-out (not persisted)
+  setIsMusicFading: (fading: boolean) => void;
 
   // --- Sync actions ---
   hydrate: () => Promise<void>;
@@ -89,6 +91,8 @@ export const useStore = create<AppState>()(
       setCurrentStation: (stationId) => set({ currentStation: stationId }),
       isMusicPlaying: false,
       setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
+      isMusicFading: false,
+      setIsMusicFading: (fading) => set({ isMusicFading: fading }),
 
       hydrate: async () => {
         const remoteData = await remote.fetchAll();
