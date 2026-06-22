@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { useStore } from "./store/useStore";
 import { Toast } from "./components/ui";
+import { GrainGradient } from "./components/GrainGradient";
 import { MissionsPage } from "./components/MissionsPage";
 import { MissionPage } from "./components/MissionPage";
 import { FocusPage } from "./components/FocusPage";
@@ -34,14 +35,15 @@ export default function App() {
   const isFocus = view === "focus";
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="relative min-h-screen text-zinc-100">
+      {!isFocus && <GrainGradient variant="subtle" />}
       <Toast message={toast} onDismiss={() => setToast(null)} />
 
       {isFocus ? (
-        // Focus mode owns the whole viewport (ultra clean).
+        // Focus mode owns the whole viewport (ultra clean, own backdrop).
         <FocusPage />
       ) : (
-        <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-6 sm:pt-10">
+        <div className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-24 pt-6 sm:pt-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={view}

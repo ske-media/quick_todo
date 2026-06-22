@@ -15,14 +15,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-orange-500 text-zinc-950 hover:bg-orange-400 active:bg-orange-600 font-semibold glow-orange",
+    "bg-gradient-to-b from-orange-400 to-orange-600 text-zinc-950 hover:from-orange-300 hover:to-orange-500 active:from-orange-500 active:to-orange-700 font-semibold glow-orange shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]",
   secondary:
-    "bg-zinc-800 text-zinc-100 hover:bg-zinc-700 active:bg-zinc-700 border border-zinc-700",
+    "bg-zinc-800/80 text-zinc-100 hover:bg-zinc-700/80 active:bg-zinc-700 border border-zinc-700 backdrop-blur shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
   ghost: "bg-transparent text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60",
   danger:
     "bg-transparent text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent hover:border-red-500/30",
   success:
-    "bg-emerald-500 text-zinc-950 hover:bg-emerald-400 active:bg-emerald-600 font-semibold",
+    "bg-gradient-to-b from-emerald-400 to-emerald-600 text-zinc-950 hover:from-emerald-300 hover:to-emerald-500 active:from-emerald-500 active:to-emerald-700 font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -95,8 +95,11 @@ export function Card({
     <div
       onClick={onClick}
       className={[
-        "rounded-2xl border border-zinc-800 bg-zinc-900 shadow-lg shadow-black/30",
-        onClick ? "cursor-pointer hover:border-zinc-700 transition-colors" : "",
+        "rounded-2xl border border-white/10 bg-zinc-900/70 backdrop-blur-xl",
+        "shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.07)]",
+        onClick
+          ? "cursor-pointer transition-all hover:border-orange-500/40 hover:bg-zinc-900/85 hover:shadow-[0_16px_50px_-12px_rgba(249,115,22,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]"
+          : "",
         className,
       ].join(" ")}
     >

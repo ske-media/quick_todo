@@ -52,20 +52,32 @@ export function MissionsPage() {
     <div className="flex flex-col gap-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-zinc-50">
+          <p className="mb-0.5 text-[11px] font-medium uppercase tracking-[0.25em] text-orange-400/80">
+            Quick Todo
+          </p>
+          <h1 className="text-grainient text-3xl font-black tracking-tight">
             Missions
           </h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             Organisez votre travail, lancez le focus.
           </p>
         </div>
-        <IconButton
-          aria-label="Voir les logs"
-          onClick={() => navigate("logs")}
-          className="border border-zinc-800"
-        >
-          <ClipboardList size={20} />
-        </IconButton>
+        <div className="flex items-center gap-2">
+          <span className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-zinc-900/70 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-400 backdrop-blur sm:inline-flex">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-400" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+            Synchronisé
+          </span>
+          <IconButton
+            aria-label="Voir les logs"
+            onClick={() => navigate("logs")}
+            className="border border-white/10 bg-zinc-900/70 backdrop-blur"
+          >
+            <ClipboardList size={20} />
+          </IconButton>
+        </div>
       </header>
 
       <Button variant="primary" size="lg" full onClick={() => setCreating(true)}>
@@ -199,6 +211,14 @@ export function MissionsPage() {
           </div>
         </div>
       </Modal>
+
+      <footer className="mt-6 flex items-center justify-between border-t border-white/5 pt-4 text-[11px] uppercase tracking-wider text-zinc-600">
+        <span>Quick Todo · Time Tracker</span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+          v1.0
+        </span>
+      </footer>
     </div>
   );
 }

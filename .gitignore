@@ -5,6 +5,11 @@ dist-ssr
 .DS_Store
 *.tsbuildinfo
 
+# Variables d'environnement (gérées dans Netlify). .env.example reste suivi.
+.env
+.env.*
+!.env.example
+
 # Editor
 .vscode/*
 !.vscode/extensions.json

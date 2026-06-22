@@ -68,6 +68,114 @@ input[type="number"] {
   }
 }
 
+/* Slow horizontal drift for the ambient gradient streaks */
+@keyframes streak-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 340px 0;
+  }
+}
+
+/* Futuristic orange ribbon backdrop animations */
+@keyframes ribbon-float {
+  0% {
+    transform: translate(-50%, -50%) rotate(-8deg) translateY(0)
+      scaleY(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(-6deg) translateY(-14px)
+      scaleY(1.06);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(-8deg) translateY(0)
+      scaleY(1);
+  }
+}
+
+@keyframes ribbon-shimmer {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 80px 0;
+  }
+}
+
+@keyframes sheen-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.8;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(220%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.animate-ribbon-float {
+  animation: ribbon-float 14s ease-in-out infinite;
+}
+.animate-ribbon-shimmer {
+  animation: ribbon-shimmer 6s linear infinite;
+}
+.animate-sheen-sweep {
+  animation: sheen-sweep 7s ease-in-out infinite;
+}
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+/* Gradient border helper for glass cards */
+.border-gradient-orange {
+  border: 1px solid transparent;
+  background-image: linear-gradient(#0a0a0bcc, #0a0a0bcc),
+    linear-gradient(140deg, rgba(253, 186, 116, 0.5), rgba(249, 115, 22, 0.1) 40%, rgba(255, 255, 255, 0.06));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[streak-drift_22s_linear_infinite\],
+  .animate-ribbon-float,
+  .animate-ribbon-shimmer,
+  .animate-sheen-sweep,
+  .animate-pulse-glow {
+    animation: none !important;
+  }
+}
+
+/* Warm gradient text accent */
+.text-grainient {
+  background-image: linear-gradient(
+    100deg,
+    #fed7aa 0%,
+    #fb923c 40%,
+    #f97316 70%,
+    #ea580c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .glow-orange {
   box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.15),
     0 8px 30px -8px rgba(249, 115, 22, 0.35);

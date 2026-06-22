@@ -13,6 +13,7 @@ import { useFullscreen } from "../hooks/useFullscreen";
 import { playAlarm, unlockAudio } from "../lib/audio";
 import { formatDuration } from "../lib/format";
 import { IconButton } from "./ui";
+import { GrainGradient } from "./GrainGradient";
 import { PauseModal } from "./PauseModal";
 import { SpaceTravelTransition } from "./SpaceTravelTransition";
 import type { Mission, PauseReason, Task } from "../types";
@@ -79,6 +80,8 @@ export function FocusPage() {
       ref={containerRef}
       className="relative flex min-h-screen flex-col bg-zinc-950"
     >
+      <GrainGradient variant="bold" />
+
       <SpaceTravelTransition
         active={transition.active}
         isFinal={transition.isFinal}
@@ -86,7 +89,7 @@ export function FocusPage() {
       />
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 pt-5">
+      <div className="relative z-10 flex items-center justify-between px-5 pt-5">
         <button
           onClick={() => {
             void exit();
@@ -109,22 +112,24 @@ export function FocusPage() {
       </div>
 
       {/* The actual focus body is keyed by task id so its timer fully resets. */}
-      <FocusTask
-        key={task.id}
-        task={task}
-        mission={mission}
-        paused={transition.active}
-        onValidate={handleValidated}
-        onStopLater={(elapsed) => {
-          updateTaskTime(task.id, elapsed);
-          setTaskStatus(task.id, "paused");
-          void exit();
-          navigate("missions");
-        }}
-        onPauseRecorded={(reason: PauseReason, durationSec: number) => {
-          useStore.getState().addPause(task.id, reason, durationSec);
-        }}
-      />
+      <div className="relative z-10 flex flex-1 flex-col">
+        <FocusTask
+          key={task.id}
+          task={task}
+          mission={mission}
+          paused={transition.active}
+          onValidate={handleValidated}
+          onStopLater={(elapsed) => {
+            updateTaskTime(task.id, elapsed);
+            setTaskStatus(task.id, "paused");
+            void exit();
+            navigate("missions");
+          }}
+          onPauseRecorded={(reason: PauseReason, durationSec: number) => {
+            useStore.getState().addPause(task.id, reason, durationSec);
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -220,6 +225,7 @@ function FocusTask({
             strokeDasharray={C}
             animate={{ strokeDashoffset: C * (1 - progress) }}
             transition={{ ease: "linear", duration: 0.3 }}
+            style={{ filter: `drop-shadow(0 0 10px ${accent}aa)` }}
           />
         </svg>
 
